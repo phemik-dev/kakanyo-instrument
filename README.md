@@ -1,57 +1,63 @@
-# Kakanyo — an independent epistemic instrument
+# Kakanyo — independent epistemic research instrument
 
-**P0 technical reference · not accepted canon · not yet model-portability tested**
+**Executable integrated build v0.2** · Python 3.10+ · local-first · framework-neutral
 
 > Kakanyo is not the model. Kakanyo is the epistemic behaviour the model is required to instantiate.
 
-Kakanyo is a source-bound method for *disciplined curiosity*: evidence independence, provenance preservation, explicit inference, uncertainty conservation, contradiction, context, counter-tests, human boundaries, reversible synthesis and reflexive challenge.
+Kakanyo applies disciplined curiosity to a bounded evidence corpus. Its five research movements contain 21 specific cycles. It preserves evidence ancestry, contradictions, uncertainty, counter-tests and the human decision boundary.
 
-The 12-invariant / five-movement / 21-cycle method originated in the September 2026 instrument programme. This public repository contains a **structural reference implementation**. It does **not** contain private research corpora, proprietary case studies or any human biography.
+**Kakanyo is not a chatbot persona and is not a HiveForge module.** It works as a standalone Python package, a CLI, a local MCP tool service or a token-authenticated localhost HTTP MCP service. ChatGPT, Codex and HiveConnect can connect to the instrument through their supported host runtimes once configured.
 
-## Quick start
-
-Python 3.10+ is required; runtime uses the standard library.
+## Get running
 
 ```bash
-python -m kakanyo validate examples/synthetic-case.json
-python -m kakanyo method
-python -m kakanyo run examples/synthetic-case.json --state /tmp/kakanyo-demo-state.json --adapter offline
-python -m kakanyo status /tmp/kakanyo-demo-state.json
+python -m pip install .
 python -m unittest discover -s tests -v
+kakanyo method
+kakanyo fixtures --outdir ./example-fixtures
 ```
-
-Each `run` processes exactly **one** scheduled cycle and persists state. The `offline` adapter is a **smoke-test stub**. It performs NO actual research analysis, and its state is not a valid case-study conclusion.
-
-## Model adapters (explicit opt-in only)
-
-A Chat Completions-compatible endpoint can be used with the following shape. This sends the complete authorised synthetic/approved case data to the configured provider; verify permission and the endpoint first.
 
 ```bash
-export KAKANYO_API_KEY="set-privately-in-your-shell"
-python -m kakanyo run examples/synthetic-case.json --state /tmp/kakanyo-model-state.json \
-  --adapter openai-compatible --endpoint https://YOUR-APPROVED-ENDPOINT/v1/chat/completions \
-  --model YOUR-MODEL
+kakanyo ingest ./my-documents --case-id my-inquiry \
+  --question "What does the evidence establish, and what is still unproven?" \
+  --scope "The documents supplied for this inquiry" --workspace .kakanyo
+
+# One local smoke cycle (custody only — no AI research)
+kakanyo cycle my-inquiry --workspace .kakanyo --adapter offline
+
+# One real model-backed cycle with a locally installed Ollama model
+kakanyo cycle my-inquiry --workspace .kakanyo --adapter ollama --model YOUR_LOCAL_MODEL
+
+kakanyo case-status my-inquiry --workspace .kakanyo
+kakanyo audit my-inquiry --workspace .kakanyo
+kakanyo case-report my-inquiry --workspace .kakanyo --output dossier.md
 ```
 
-For Anthropic's Messages API, set `KAKANYO_ANTHROPIC_KEY` and run `--adapter claude --model YOUR-MODEL`.
+Install `".[documents]"` for optional PDF/DOCX extraction. Only read approved files. Default corpus permission is **private**, and provider egress is blocked unless each source is explicitly eligible.
 
-Keys are read from environment variables; never commit them. Remote adapters are **not yet live-provider certified**, even if request/response structural tests pass.
+## What's built
 
-## What exists
+| Capability | Implementation |
+|---|---|
+| Portable method | 12 invariants, five movements, 21 distinct cycle instructions |
+| Intake | Explicit local documents or typed JSON corpus/inquiry contracts |
+| Evidence | Provenance IDs, derivative-independence checks, source span/hash anchors |
+| Durable research | SQLite case state, 21-cycle progression, claim/OPEN/contradiction ledgers |
+| Governance | Hold/resume, reviewer opinions, tamper-evident audit event history |
+| Bounded context | Deterministic retrieval with logged omissions and no hidden truncation |
+| Model adapters | Local Ollama, OpenAI-compatible APIs, Anthropic Claude and offline test stub |
+| Interfaces | CLI, stdio MCP, bearer-gated loopback HTTP MCP |
+| Results | Markdown/HTML/JSON dossiers and eight synthetic adversarial conformance cases |
+| Build | Python test matrix and wheel CI |
 
-- 12 epistemic invariants; 5 movements; 21 defined cycles.
-- Explicit source independence roots; claim typing; provenance reference IDs; open and contradiction registers.
-- Corpus/inquiry contracts; deterministic source-level release checks; bounded prompt size.
-- Durable per-cycle state; digest-based detection of modified input; fail-closed response validation.
-- Offline custody-only stub and opt-in remote adapters.
-- Executable structural tests; documented research conformance plan.
+## Conformance is not automatic
 
-## What is *not* proven
+The eight challenges require evaluation of *meaning*, not just valid JSON. Structural tests and mock adapters cannot establish source entailment, fairness, real-provider interoperability or genuine cross-model behavioural portability. Kakanyo's output remains reversible and should receive accountable human review.
 
-Passing validation cannot establish that a statement is supported by the cited source. Declared independence roots may be wrong. No automated evaluator yet proves causality restraint, respectful human inference, omission detection or general research quality. There is no distributed state locking, multi-user authorisation, live provider certification, independently scored P0 portability study or callable remote MCP service.
+Read the [operator guide](docs/OPERATOR_GUIDE.md), [conformance profile](docs/KCP-001.md) and [roadmap](docs/ROADMAP.md).
 
-The same source ID existing is **not** the same as correct provenance. This is not yet suitable as an unattended autonomous researcher.
+## Hosting and privacy
 
-See [KCP-001 conformance plan](docs/KCP-001.md) and [build roadmap](docs/ROADMAP.md). Changes should be reviewed via pull requests before adoption.
+`kakanyo serve-mcp` runs as a child process under a trusted client. `kakanyo serve-http` serves only the loopback interface, requires a long random `KAKANYO_HTTP_TOKEN`, and exposes JSON-RPC at `POST /mcp`. An internet-accessible endpoint, multi-tenant isolation and provider tokens require additional operator-managed infrastructure and acceptance testing. This repository does not silently deploy a public service.
 
-Copyright © 2026 Phemi Kgomongwe. All rights reserved until a repository licence is explicitly approved.
+No proprietary or private Kakanyo case corpus is in this public repository. Do not commit `.kakanyo/`, credentials or real-person evidence. Copyright © 2026 Phemi Kgomongwe. All rights reserved; licensing remains a separate explicit decision.

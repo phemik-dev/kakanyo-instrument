@@ -1,14 +1,14 @@
-name: structural-tests
-
+name: kakanyo-ci
 on:
   push:
-    branches: [main, "feat/**"]
+    branches: [main, "feat/**", "build/**"]
   pull_request:
 
 jobs:
   python:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.12"]
     steps:
@@ -16,7 +16,27 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Structural tests (no provider key)
+      - name: Test entire independent instrument
         run: python -m unittest discover -s tests -v
-      - name: Contract smoke
+      - name: Validate P0 synthetic case
         run: python -m kakanyo validate examples/synthetic-case.json
+      - name: Create local research case
+        run: python -m kakanyo import-case examples/synthetic-case.json --workspace /tmp/kakanyo-ci
+      - name: Run and audit research custody
+        run: |
+          python -m kakanyo cycle KCP-P0-SYNTH-01 --workspace /tmp/kakanyo-ci --adapter offline
+          python -m kakanyo audit KCP-P0-SYNTH-01 --workspace /tmp/kakanyo-ci
+          python -m kakanyo case-report KCP-P0-SYNTH-01 --workspace /tmp/kakanyo-ci --output /tmp/kakanyo-ci-dossier.md
+      - name: Run eight synthetic conformance exercises
+        run: |
+          python -m kakanyo benchmark --adapter offline --output-dir /tmp/kakanyo-trials --name github-ci
+          python -m kakanyo benchmark-summary /tmp/kakanyo-trials/github-ci.json
+      - name: Build a portable wheel
+        run: |
+          python -m pip install --upgrade build
+          python -m build --wheel
+      - name: Upload distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: kakanyo-wheel-py${{ matrix.python-version }}
+          path: dist/*.whl
