@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .core import ContractError, apply_output, assert_external_release, corpus_digest, new_state, validate_case
-from .evidence import derivation_roots, verify_claim_anchors
+from .evidence import derivation_roots, verify_claim_anchors, materialise_quotes
 from .runtime import build_prompt, build_retrieved_prompt
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$")
@@ -165,7 +165,9 @@ class Workspace:
             if "Corpus exceeds bounded context" not in str(exc):
                 raise
             prompt, retrieval = build_retrieved_prompt(case, state, cycle)
-        response = adapter.invoke(prompt)
+        raw_response = adapter.invoke(prompt)
+        selected_ids = retrieval.get("selected") if retrieval.get("strategy") != "complete" else None
+        response = materialise_quotes(case, raw_response, selected_ids)
         updated = apply_output(state, case, response, cycle)
         for claim in updated["runs"][-1]["output"]["claims"]:
             verify_claim_anchors(case, claim)
