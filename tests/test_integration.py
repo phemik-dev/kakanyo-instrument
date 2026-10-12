@@ -107,4 +107,36 @@ class HTTPTests(unittest.TestCase):
             with self.assertRaises(ContractError):
                 create_server(tmp,host="0.0.0.0",token="long-synthetic-secret-123456789")
 
+
+class ModelQuoteTests(unittest.TestCase):
+    def test_claim_quote_becomes_an_anchor(self):
+        from kakanyo.evidence import materialise_quotes
+        case=generate_fixture("T01")
+        claim={"claim_id":"Q1","statement":"A memo reports a restart attempt",
+               "claim_type":"DIRECT","status":"candidate","evidence_refs":["S1"],
+               "evidence_quotes":[{"source_id":"S1","quote":"restart attempt"}],
+               "qualification":"","counterevidence":[],"counter_test":"Check another log",
+               "what_would_change_this":"Evidence that the memo was fabricated"}
+        result=materialise_quotes(case,{"claims":[claim],"contradictions":[],
+               "newly_open":[],"weakened_claims":[],"next_pressure_tests":[],"self_limitations":[]})
+        self.assertEqual(result["claims"][0]["anchors"][0]["source_id"],"S1")
+        self.assertNotIn("evidence_quotes",result["claims"][0])
+
+    def test_direct_claim_cannot_launder_unsupported_quote(self):
+        from kakanyo.evidence import materialise_quotes
+        case=generate_fixture("T01")
+        claim={"claim_id":"Q1","statement":"Fabricated approval",
+               "claim_type":"DIRECT","status":"candidate","evidence_refs":["S1"],
+               "evidence_quotes":[{"source_id":"S1","quote":"Board approved release"}],
+               "qualification":"","counterevidence":[],"counter_test":"Check release",
+               "what_would_change_this":"Any actual release record"}
+        with self.assertRaises(ContractError):
+            materialise_quotes(case,{"claims":[claim]})
+
+    def test_direct_claim_without_quote_is_rejected(self):
+        from kakanyo.evidence import materialise_quotes
+        case=generate_fixture("T01")
+        with self.assertRaises(ContractError):
+            materialise_quotes(case,{"claims":[{"claim_type":"DIRECT","evidence_refs":["S1"]}]})
+
 if __name__=="__main__":unittest.main()
