@@ -99,7 +99,7 @@ class HTTPTests(unittest.TestCase):
                     "Authorization":"Bearer "+secret,"Content-Type":"application/json"})
                 with urllib.request.urlopen(valid,timeout=4) as response:
                     obj=json.loads(response.read())
-                self.assertEqual(len(obj["result"]["tools"]),10)
+                self.assertEqual(len(obj["result"]["tools"]),11)
             finally:
                 server.shutdown();th.join(timeout=5);server.server_close()
     def test_external_bind_denied(self):
