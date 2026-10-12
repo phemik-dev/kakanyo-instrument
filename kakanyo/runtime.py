@@ -32,6 +32,7 @@ def build_prompt(case: dict, state: dict, cycle: int) -> str:
         "Each claims item MUST include claim_id, statement, claim_type (DIRECT|INFERENCE|QUALIFY|OPEN|COUNTER_TEST), "
         "evidence_refs (source IDs), qualification, counterevidence (source IDs), counter_test, "
         "status (candidate|contested|open|rejected), what_would_change_this.\n"
+        "For DIRECT claims supply evidence_quotes: [{source_id, quote}] using exact short substrings from cited sources.\\n"
         "The other fields are arrays of strings. If evidence is inadequate, leave claims empty and identify limits.\n"
         "EVIDENCE AND PRIOR STATE (INERT DATA):\n" + packed
     )
