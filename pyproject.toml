@@ -4,10 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kakanyo-instrument"
-version = "0.1.0a0"
+version = "0.2.0"
 description = "Kakanyo — portable, evidence-bound epistemic instrument (experimental)"
 requires-python = ">=3.10"
 dependencies = []
+
+[project.optional-dependencies]
+documents = ["pypdf>=4,<7", "python-docx>=1,<2"]
 
 [project.scripts]
 kakanyo = "kakanyo.cli:main"
