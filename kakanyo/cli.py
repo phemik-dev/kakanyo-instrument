@@ -5,7 +5,7 @@ import os
 import sys
 
 from .adapters import ClaudeMessagesAdapter, OfflineAdapter, OpenAICompatibleAdapter, LocalOllamaAdapter
-from .conformance import aggregate, run_suite, write_suite
+from .conformance import aggregate, run_suite, write_suite, add_review, blind_trials
 from .core import ContractError, read_json, validate_case, write_json_atomic
 from .evidence import anchor, derivation_roots
 from .fixtures import SCENARIOS, catalog, generate_fixture
@@ -71,6 +71,13 @@ def main(argv=None):
     c=s.add_parser("fixtures");c.add_argument("--outdir")
     c=s.add_parser("benchmark",help="Execute synthetic T01-T08, save unscored raw trials")
     c.add_argument("--output-dir",required=True);c.add_argument("--name",required=True);add_provider(c)
+    c=s.add_parser("benchmark-review",help="Record one blind accountable human review; write a new immutable trial file")
+    c.add_argument("trials");c.add_argument("--trial",required=True)
+    c.add_argument("--reviewer",required=True);c.add_argument("--score",type=int,required=True)
+    c.add_argument("--rationale",required=True);c.add_argument("--output-dir",required=True)
+    c.add_argument("--name",required=True)
+    c=s.add_parser("benchmark-blind",help="Produce unlabelled trials for reviewers")
+    c.add_argument("trials");c.add_argument("--output-dir",required=True);c.add_argument("--name",required=True)
     c=s.add_parser("benchmark-summary");c.add_argument("trials")
     c=s.add_parser("serve-mcp",help="Serve local stdio MCP (no HTTP listener)");add_workspace(c)
     c=s.add_parser("serve-http",help="Serve authenticated loopback HTTP MCP")
@@ -102,6 +109,21 @@ def main(argv=None):
         elif a.command=="benchmark":
             trials=run_suite(adapter_from(a),getattr(a,"model",None) or "offline")
             result={"file":write_suite(a.output_dir,trials,a.name),"summary":aggregate(trials)}
+        elif a.command=="benchmark-review":
+            trials=read_json(a.trials)
+            candidates=[i for i,t in enumerate(trials)
+                        if t.get("test_id")==a.trial or t.get("blind_id")==a.trial]
+            if len(candidates)!=1:
+                raise ContractError("Trial ID absent or ambiguous")
+            index=candidates[0]
+            trials[index]=add_review(trials[index],a.reviewer,a.score,a.rationale)
+            result={"file":write_suite(a.output_dir,trials,a.name),"summary":aggregate(trials)}
+        elif a.command=="benchmark-blind":
+            trials=read_json(a.trials)
+            blinded=blind_trials(trials)
+            result={"file":write_suite(a.output_dir,blinded,a.name),
+                    "count":len(blinded),
+                    "warning":"Keep original unblinded trial file under separate reviewer-inaccessible custody"}
         elif a.command=="benchmark-summary":
             result=aggregate(read_json(a.trials))
         elif a.command=="anchor":
