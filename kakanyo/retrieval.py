@@ -40,7 +40,7 @@ def select_evidence(case: dict, question: str, budget: int=MAX_PROMPT_EVIDENCE, 
             lowered=text.lower()
             positions=[lowered.find(token) for token in sorted(tokens) if lowered.find(token)>=0]
             center=min(positions) if positions else 0
-            start=max(0,center-350)
+            start=max(0,center-min(100,allocation//5))
             end=min(len(text),start+allocation)
             clone["text"]=text[start:end]
             clone["excerpt_start"]=start
