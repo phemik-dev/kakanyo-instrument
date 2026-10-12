@@ -8,6 +8,7 @@ import threading
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from kakanyo.adapters import OfflineAdapter
 from kakanyo.conformance import add_review, aggregate, run_suite, run_trial, write_suite
@@ -192,7 +193,7 @@ class MCPTests(unittest.TestCase):
         self.assertEqual(result["serverInfo"]["name"],"kakanyo-instrument")
     def test_tools_declared(self):
         tools=self.rpc("tools/list")["result"]["tools"]
-        self.assertEqual(len(tools),10)
+        self.assertEqual(len(tools),11)
     def test_import_run_audit_via_mcp(self):
         case=synthetic()
         def tool(name,args):
@@ -205,6 +206,24 @@ class MCPTests(unittest.TestCase):
         self.assertEqual(status["next_cycle"],2)
         check=tool("verify_history",{"case_id":status["case_id"]})
         self.assertTrue(check["chain_valid"])
+    def test_multi_cycle_inquiry_tool_offline_is_explicitly_refused(self):
+        case=synthetic()
+        self.ws.import_case(case)
+        r=self.rpc("tools/call",{"name":"kakanyo_run_inquiry",
+             "arguments":{"case_id":case["corpus"]["corpus_id"],"count":3}})["result"]
+        self.assertTrue(r["isError"])
+        self.assertEqual(self.ws.status(case["corpus"]["corpus_id"])["next_cycle"],1)
+
+    def test_multi_cycle_inquiry_is_bounded(self):
+        case=synthetic()
+        self.ws.import_case(case)
+        payload='{"claims":[],"contradictions":[],"newly_open":[],"weakened_claims":[],"next_pressure_tests":[],"self_limitations":[]}'
+        with patch("kakanyo.adapters._post",return_value={"message":{"content":payload}}):
+            r=self.rpc("tools/call",{"name":"kakanyo_run_inquiry",
+                 "arguments":{"case_id":case["corpus"]["corpus_id"],"count":3,"adapter":"ollama"}})["result"]
+        self.assertFalse(r["isError"],r)
+        self.assertEqual(json.loads(r["content"][0]["text"])["completed"],3)
+
     def test_mcp_remote_fail_closed(self):
         old=os.environ.pop("KAKANYO_MCP_REMOTE_ENABLED",None)
         try:
