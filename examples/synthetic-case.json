@@ -1,0 +1,24 @@
+{
+  "corpus": {
+    "corpus_id": "KCP-P0-SYNTH-01",
+    "scope": "Entirely fictional operational incident",
+    "excluded_sources": ["No individual testimony collected"],
+    "temporal_bounds": "Synthetic chronology",
+    "known_gaps": ["Restart not independently verified", "No direct evidence of motive"],
+    "permissions": "synthetic",
+    "retrieval_limitations": "Three provided excerpts only",
+    "sources": [
+      {"id": "S1", "independence_root": "A", "provenance": "Invented incident memo A", "permissions": "synthetic", "text": "A memo states that manual approval was interrupted and a restart was attempted."},
+      {"id": "S2", "independence_root": "A", "provenance": "Invented paraphrase of memo A", "permissions": "synthetic", "text": "An interruption occurred, and a restart was attempted."},
+      {"id": "S3", "independence_root": "B", "provenance": "Invented independent note B", "permissions": "synthetic", "text": "The operator reported that restored status was not fully visible."}
+    ]
+  },
+  "inquiry": {
+    "object_of_inquiry": "A fictional operational incident",
+    "central_question": "What evidence of continuity exists, and what remains unknown?",
+    "prohibited_inferences": ["Do not infer personal motivation", "Do not claim full recovery without proof"],
+    "desired_movement_depth": "One cycle per invocation",
+    "decision_context": "Synthetic instrument demonstration only",
+    "stopping_condition": "Stop substantive conclusions when recovery cannot be verified"
+  }
+}
