@@ -73,6 +73,8 @@ def main(argv=None):
     c.add_argument("--output-dir",required=True);c.add_argument("--name",required=True);add_provider(c)
     c=s.add_parser("benchmark-summary");c.add_argument("trials")
     c=s.add_parser("serve-mcp",help="Serve local stdio MCP (no HTTP listener)");add_workspace(c)
+    c=s.add_parser("serve-http",help="Serve authenticated loopback HTTP MCP")
+    add_workspace(c);c.add_argument("--host",default="127.0.0.1");c.add_argument("--port",type=int,default=8765)
 
     a=p.parse_args(argv)
     try:
@@ -107,6 +109,10 @@ def main(argv=None):
         elif a.command=="serve-mcp":
             from .mcp import serve
             serve(a.workspace)
+            return
+        elif a.command=="serve-http":
+            from .http_service import serve
+            serve(a.workspace,a.host,a.port)
             return
         else:
             ws=Workspace(a.workspace)
