@@ -10,6 +10,7 @@ from .core import ContractError, read_json, validate_case, write_json_atomic
 from .evidence import anchor, derivation_roots
 from .fixtures import SCENARIOS, catalog, generate_fixture
 from .method import CYCLES, INVARIANTS
+from .ingest import case_from_directory
 from .reporting import write_report
 from .runtime import execute_cycle
 from .workspace import Workspace
@@ -48,6 +49,11 @@ def main(argv=None):
     c.add_argument("case");c.add_argument("--state",default="kakanyo-state.json");add_provider(c)
     c=s.add_parser("status",help="Legacy JSON checkpoint inspection");c.add_argument("state")
     c=s.add_parser("import-case",help="Ingest a scoped case into local SQLite");c.add_argument("case");add_workspace(c)
+    c=s.add_parser("ingest",help="Ingest documents from a local directory as a bounded research case")
+    c.add_argument("directory");c.add_argument("--case-id",required=True)
+    c.add_argument("--question",required=True);c.add_argument("--scope",required=True)
+    c.add_argument("--permissions",choices=["private","synthetic","approved-for-external-model"],default="private")
+    add_workspace(c)
     c=s.add_parser("list-cases");add_workspace(c)
     c=s.add_parser("case-status");c.add_argument("case_id");add_workspace(c)
     c=s.add_parser("cycle",help="Run next cycle; model adapter or explicit offline stub")
@@ -104,6 +110,9 @@ def main(argv=None):
             ws=Workspace(a.workspace)
             if a.command=="import-case":
                 result=ws.import_case(read_json(a.case))
+            elif a.command=="ingest":
+                case=case_from_directory(a.directory,a.case_id,a.question,a.scope,a.permissions)
+                result=ws.import_case(case)
             elif a.command=="list-cases":
                 result=ws.list_cases()
             elif a.command=="case-status":

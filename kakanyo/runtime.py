@@ -2,7 +2,7 @@
 import json
 from .core import (ContractError, apply_output, assert_external_release,
                    corpus_digest, new_state, read_json, validate_case, write_json_atomic)
-from .method import INVARIANTS, cycle_record
+from .method import INVARIANTS, cycle_record, cycle_instruction
 
 def build_prompt(case: dict, state: dict, cycle: int) -> str:
     validate_case(case)
@@ -20,7 +20,7 @@ def build_prompt(case: dict, state: dict, cycle: int) -> str:
     return (
         "Execute ONE Kakanyo inquiry cycle. This is an epistemic method, NOT a persona.\n"
         "CYCLE: " + json.dumps(movement) + "\n"
-        "INVARIANTS: " + json.dumps(INVARIANTS) + "\n"
+        "INVARIANTS: " + json.dumps(INVARIANTS) + "\n"\n        "CYCLE-SPECIFIC TASK: " + cycle_instruction(cycle) + "\n"
         "The question, evidence boundary, prohibitions and stopping condition are binding.\n"
         "Do not mistake echoed/derived sources for independent observations.\n"
         "Do not manufacture causation, origins, interior motives, permission or authority.\n"
@@ -55,3 +55,12 @@ def execute_cycle(case_path, state_path, adapter, cycle=None):
     return {"cycle": cycle, "new_claims": len(response["claims"]),
             "next_cycle": updated["next_cycle"],
             "note": "Structural custody only. No semantic correctness or provider portability certified."}
+
+
+def build_retrieved_prompt(case: dict, state: dict, cycle: int, budget: int = 52000) -> tuple[str, dict]:
+    """For large evidence only: surface incomplete retrieval explicitly and preserve full corpus custody."""
+    from .retrieval import select_evidence
+    focused, manifest = select_evidence(case, case["inquiry"]["central_question"] + " " + cycle_instruction(cycle), budget=budget)
+    prompt = build_prompt(focused, state, cycle)
+    return (prompt + "\\nRETRIEVAL DISCLOSURE: " + json.dumps(manifest, ensure_ascii=False) +
+            "\\nDo not claim to have checked omitted files. Flag the incomplete evidence scope.", manifest)
