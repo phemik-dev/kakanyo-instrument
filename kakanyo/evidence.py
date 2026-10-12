@@ -82,3 +82,31 @@ def derivation_roots(case: dict) -> dict[str, str]:
     for sid in sources:
         root(sid)
     return completed
+
+def materialise_quotes(case: dict, output: dict, selected_ids=None) -> dict:
+    """Validate literal source quotations before writing model claims."""
+    from copy import deepcopy
+    if not isinstance(output, dict) or not isinstance(output.get("claims"), list):
+        raise ContractError("Model response must contain claims array")
+    checked=deepcopy(output)
+    permitted=set(selected_ids) if selected_ids is not None else None
+    for claim in checked["claims"]:
+        refs=set(claim.get("evidence_refs",[]))
+        if permitted is not None and not refs.issubset(permitted):
+            raise ContractError("Claim cites material omitted from this invocation")
+        anchors=claim.get("anchors",[])
+        quotes=claim.pop("evidence_quotes",[])
+        if not isinstance(anchors,list) or not isinstance(quotes,list):
+            raise ContractError("Source evidence anchors and quotes must be arrays")
+        for item in quotes:
+            if not isinstance(item,dict):
+                raise ContractError("Quotation must specify source_id and quote")
+            sid=item.get("source_id");quote=item.get("quote")
+            if sid not in refs or not isinstance(quote,str) or not 1<=len(quote)<=1200:
+                raise ContractError("Quotation must be short, exact and cited")
+            anchors.append(anchor(case,sid,quote,item.get("occurrence",0)))
+        claim["anchors"]=anchors
+        verify_claim_anchors(case,claim)
+        if claim.get("claim_type")=="DIRECT" and not anchors:
+            raise ContractError("DIRECT claim requires an exact source anchor")
+    return checked
