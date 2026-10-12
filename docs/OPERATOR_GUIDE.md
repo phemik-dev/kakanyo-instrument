@@ -66,6 +66,18 @@ kakanyo benchmark --adapter offline --output-dir ./trials --name smoke-01
 kakanyo benchmark-summary ./trials/smoke-01.json
 ```
 
+To produce blinded, scored trials:
+
+```bash
+kakanyo benchmark-blind ./trials/smoke-01.json --output-dir ./blinded --name batch-01
+kakanyo benchmark-review ./blinded/batch-01.json --trial BLIND_ID \
+  --reviewer researcher-A --score 1 --rationale "Specific supported criticism" \
+  --output-dir ./reviewed --name batch-01-review-A
+kakanyo benchmark-summary ./reviewed/batch-01-review-A.json
+```
+
+Use a second independent reviewer and retain the original trial-to-blind mapping separately.
+
 Eight synthetic cases challenge source independence, causal restraint, contradiction, private-state inference, chronology, brand subtraction, authority and self-audit. Scores require blind human review; the offline run is a structural smoke.
 
 ## Callable interfaces
@@ -83,7 +95,7 @@ export KAKANYO_HTTP_TOKEN="USE_A_RANDOM_SECRET_LONGER_THAN_24_CHARACTERS"
 kakanyo serve-http --workspace .kakanyo --host 127.0.0.1 --port 8765
 ```
 
-Ten MCP tools cover case intake, status, cycle execution, reports, human reviews, holds and audit. No public HTTP binding is permitted by this reference transport. Remote ChatGPT installation still requires an approved hosting/gateway and the platform connection step; this repository does **not** deploy such infrastructure on its own.
+Eleven MCP tools cover case intake, status, cycle execution, reports, human reviews, holds and audit. No public HTTP binding is permitted by this reference transport. Remote ChatGPT installation still requires an approved hosting/gateway and the platform connection step; this repository does **not** deploy such infrastructure on its own.
 
 MCP remote provider calls are disabled by default; local Ollama remains available. For external model calls, the operator must explicitly set `KAKANYO_MCP_REMOTE_ENABLED=1`, a provider configuration and approved source-level case permissions.
 
