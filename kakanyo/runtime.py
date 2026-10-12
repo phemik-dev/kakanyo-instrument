@@ -20,7 +20,8 @@ def build_prompt(case: dict, state: dict, cycle: int) -> str:
     return (
         "Execute ONE Kakanyo inquiry cycle. This is an epistemic method, NOT a persona.\n"
         "CYCLE: " + json.dumps(movement) + "\n"
-        "INVARIANTS: " + json.dumps(INVARIANTS) + "\n"\n        "CYCLE-SPECIFIC TASK: " + cycle_instruction(cycle) + "\n"
+        "INVARIANTS: " + json.dumps(INVARIANTS) + "\n"
+        "CYCLE-SPECIFIC TASK: " + cycle_instruction(cycle) + "\n"
         "The question, evidence boundary, prohibitions and stopping condition are binding.\n"
         "Do not mistake echoed/derived sources for independent observations.\n"
         "Do not manufacture causation, origins, interior motives, permission or authority.\n"
