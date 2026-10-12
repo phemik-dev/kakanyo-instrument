@@ -1,0 +1,22 @@
+name: structural-tests
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Structural tests (no provider key)
+        run: python -m unittest discover -s tests -v
+      - name: Contract smoke
+        run: python -m kakanyo validate examples/synthetic-case.json
