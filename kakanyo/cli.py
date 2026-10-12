@@ -4,7 +4,7 @@ import json
 import os
 import sys
 
-from .adapters import ClaudeMessagesAdapter, OfflineAdapter, OpenAICompatibleAdapter
+from .adapters import ClaudeMessagesAdapter, OfflineAdapter, OpenAICompatibleAdapter, LocalOllamaAdapter
 from .conformance import aggregate, run_suite, write_suite
 from .core import ContractError, read_json, validate_case, write_json_atomic
 from .evidence import anchor, derivation_roots
@@ -19,6 +19,8 @@ def adapter_from(args):
     name = getattr(args, "adapter", "offline")
     if name == "offline":
         return OfflineAdapter()
+    if name == "ollama":
+        return LocalOllamaAdapter(getattr(args, "model", None) or "llama3.1")
     model = getattr(args, "model", None)
     if not model:
         raise ContractError("A --model is required for remote adapters")
@@ -38,7 +40,7 @@ def main(argv=None):
         cmd.add_argument("--workspace", default=os.environ.get("KAKANYO_WORKSPACE", ".kakanyo"))
     def add_provider(cmd):
         cmd.add_argument("--adapter", default="offline",
-                         choices=["offline", "openai-compatible", "claude"])
+                         choices=["offline", "openai-compatible", "claude", "ollama"])
         cmd.add_argument("--model")
         cmd.add_argument("--endpoint")
         cmd.add_argument("--key-env")

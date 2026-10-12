@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .core import ContractError, apply_output, assert_external_release, corpus_digest, new_state, validate_case
 from .evidence import derivation_roots, verify_claim_anchors
-from .runtime import build_prompt, build_retrieved_prompt
+from .runtime import build_prompt
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$")
 
@@ -158,13 +158,7 @@ class Workspace:
         if not getattr(adapter, "local_only", False):
             assert_external_release(case)
         cycle = state["next_cycle"]
-        try:
-            prompt = build_prompt(case, state, cycle)
-            retrieval = {"strategy": "complete", "omitted": [], "clipped": []}
-        except ContractError as exc:
-            if "Corpus exceeds bounded context" not in str(exc):
-                raise
-            prompt, retrieval = build_retrieved_prompt(case, state, cycle)
+        prompt = build_prompt(case, state, cycle)
         response = adapter.invoke(prompt)
         updated = apply_output(state, case, response, cycle)
         for claim in updated["runs"][-1]["output"]["claims"]:
@@ -180,7 +174,7 @@ class Workspace:
                          (canonical(updated), utcnow(), case_id))
             self._event(conn, case_id, "cycle.completed", {
                 "cycle": cycle, "response_hash": digest(response),
-                "new_claims": len(response["claims"]), "retrieval": retrieval})
+                "new_claims": len(response["claims"])})
         return self.status(case_id)
 
     def review(self, case_id, claim_id, reviewer, judgement, rationale):

@@ -93,3 +93,25 @@ class ClaudeMessagesAdapter:
             return obj
         except (KeyError, TypeError, ValueError) as exc:
             raise ProviderError("Model produced invalid instrument JSON") from exc
+
+class LocalOllamaAdapter:
+    """Local-only Ollama chat API; no secret or external provider needed."""
+    local_only = True
+    def __init__(self, model: str, endpoint="http://127.0.0.1:11434/api/chat"):
+        parsed = urlsplit(endpoint)
+        if parsed.scheme != "http" or parsed.hostname not in {"localhost", "127.0.0.1"}:
+            raise ProviderError("Ollama endpoint must be local loopback HTTP")
+        self.endpoint = endpoint
+        self.model = model
+    def invoke(self, prompt: str) -> dict:
+        response = _post(self.endpoint,
+            {"model": self.model, "stream": False, "format": "json",
+             "messages": [{"role": "system", "content": "Produce strict evidence-based JSON only."},
+                          {"role": "user", "content": prompt}]}, {})
+        try:
+            obj = json.loads(response["message"]["content"])
+            if not isinstance(obj, dict):
+                raise ValueError("expected a JSON object")
+            return obj
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ProviderError("Ollama returned invalid research output") from exc

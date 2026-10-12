@@ -6,7 +6,7 @@ import json
 import os
 import sys
 
-from .adapters import OfflineAdapter, OpenAICompatibleAdapter, ClaudeMessagesAdapter
+from .adapters import OfflineAdapter, OpenAICompatibleAdapter, ClaudeMessagesAdapter, LocalOllamaAdapter
 from .core import ContractError
 from .fixtures import catalog
 from .workspace import Workspace
@@ -26,7 +26,7 @@ TOOLS=[
     spec("list_cases","List local case IDs and status",[],{}),
     spec("import_case","Import an approved corpus and inquiry object into the local workspace",["case"],{"case":prop("object")}),
     spec("case_status","Read the bounded case state",["case_id"],{"case_id":prop()}),
-    spec("run_cycle","Execute the next research cycle; local offline stub by default",["case_id"],{"case_id":prop(),"adapter":{"type":"string","enum":["offline","openai-compatible","claude"]}}),
+    spec("run_cycle","Execute the next research cycle; local offline stub by default",["case_id"],{"case_id":prop(),"adapter":{"type":"string","enum":["offline","openai-compatible","claude","ollama"]}}),
     spec("case_report","Read claims, uncertainty and human reviews for a case",["case_id"],{"case_id":prop()}),
     spec("hold_case","Pause a case with an explicit reason",["case_id","reason"],{"case_id":prop(),"reason":prop()}),
     spec("resume_case","Resume a held case with a recorded rationale",["case_id","reason"],{"case_id":prop(),"reason":prop()}),
@@ -40,6 +40,7 @@ TOOLS=[
 
 def adapter_for_mcp(name):
     if name=="offline":return OfflineAdapter()
+    if name=="ollama":return LocalOllamaAdapter(os.environ.get("KAKANYO_MCP_MODEL","llama3.1"))
     if os.environ.get("KAKANYO_MCP_REMOTE_ENABLED")!="1":
         raise ContractError("Remote model invocation is disabled for this MCP service")
     if name=="openai-compatible":
