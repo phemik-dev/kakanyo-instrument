@@ -20,3 +20,7 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Contract smoke
         run: python -m kakanyo validate examples/synthetic-case.json
+      - name: CLI offline custody smoke
+        run: |
+          python -m kakanyo run examples/synthetic-case.json --state /tmp/kakanyo-ci-state.json --adapter offline
+          python -m kakanyo status /tmp/kakanyo-ci-state.json
